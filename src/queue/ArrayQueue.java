@@ -1,3 +1,6 @@
+import array.Array;
+import queue.Queue;
+
 public class ArrayQueue<E> implements Queue<E> {
     private Array<E> array;
 
