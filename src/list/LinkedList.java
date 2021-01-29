@@ -1,3 +1,5 @@
+package list;
+
 public class LinkedList<E> {
     private class Node{
         public E e;

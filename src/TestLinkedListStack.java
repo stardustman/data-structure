@@ -1,3 +1,6 @@
+import stack.LinkedListStack;
+import stack.Stack;
+
 import java.util.Random;
 
 public class TestLinkedListStack {

@@ -1,3 +1,4 @@
+package stack;
 public interface Stack<E> {
     int getSize();
     void push(E e);

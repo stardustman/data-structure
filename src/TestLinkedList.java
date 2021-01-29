@@ -1,5 +1,4 @@
-import java.util.Random;
-
+import list.LinkedList;
 public class TestLinkedList {
 
 

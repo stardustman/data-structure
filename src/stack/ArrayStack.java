@@ -1,3 +1,7 @@
+package stack;
+import array.Array;
+
+
 public class ArrayStack<E> implements Stack<E> {
     Array<E> array;
 
