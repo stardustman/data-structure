@@ -9,6 +9,14 @@ public class Array<E> {
         data = (E[])new Object[capacity];
     }
 
+    public Array(E [] arr){
+        data = (E[])new Object[arr.length];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = arr[i];
+        }
+        size = arr.length;
+    }
+
     public Array(){
         this(10);
     }
@@ -148,5 +156,14 @@ public class Array<E> {
 
     public E getLast(){
         return get(size - 1);
+    }
+
+    public void swap(int i, int j){
+        if(i < 0 || i >= size || j < 0 || j >= size){
+            throw new IllegalArgumentException("index is illegal.");
+        }
+        E t = data[i];
+        data[i] = data[j];
+        data[j] = t;
     }
 }
