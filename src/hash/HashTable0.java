@@ -9,13 +9,13 @@ import java.util.TreeMap;
  * @param <K>
  * @param <V>
  */
-public class HashTable1<K, V> {
+public class HashTable0<K, V> {
     // TreeMap 数组
     private TreeMap<K, V>[] hashtable;
     private int M;
     int size;
 
-    public HashTable1(int M ) {
+    public HashTable0(int M ) {
 
         this.M = M;
         this.size = 0;
@@ -25,7 +25,7 @@ public class HashTable1<K, V> {
         }
     }
 
-    public HashTable1(){
+    public HashTable0(){
         this(97);
     }
 

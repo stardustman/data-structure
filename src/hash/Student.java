@@ -1,4 +1,4 @@
-package hashcode;
+package hash;
 
 public class Student {
     private int grade;

@@ -10,7 +10,7 @@ import java.util.TreeMap;
  * @param <K>
  * @param <V>
  */
-public class HashTable<K, V> {
+public class HashTable1<K, V> {
     // TreeMap 数组
     private TreeMap<K, V>[] hashtable;
     private int M;
@@ -20,7 +20,7 @@ public class HashTable<K, V> {
     private static final int lowerTol = 2;
     private static final int initCapacity = 7;
 
-    public HashTable(int M ) {
+    public HashTable1(int M ) {
 
         this.M = M;
         this.size = 0;
@@ -30,7 +30,7 @@ public class HashTable<K, V> {
         }
     }
 
-    public HashTable(){
+    public HashTable1(){
         this(initCapacity);
     }
 

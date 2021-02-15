@@ -4,25 +4,34 @@ import java.util.TreeMap;
 
 /**
  * 使用 separate chaining
- * 其实就是利用 hash(key) 进行分组
+ * 其实就是利用 index = hash(key) 进行分组
  * 分层、分组、有序 提升效率三大指导思想
  * 动态扩容、缩容
+ * 相较于二叉树牺牲了顺序性
  * @param <K>
  * @param <V>
  */
-public class HashTable<K, V> {
+public class HashTable2<K, V> {
+    private final int[] capacity = {
+            // 质数
+            53, 97, 193, 389, 769, 1543, 3079,
+            6151, 12289, 24593, 49157, 98317, 196613, 393241,
+            786433, 1572869, 3145739, 6291469, 12582917,
+            25165843, 100663319, 201326611, 402653189, 805306457, 1610612741
+    };
     // TreeMap 数组
+    // 对于 TreeMap 的 K 需要可比较性的
     private TreeMap<K, V>[] hashtable;
     private int M;
     int size;
 
     private static final int upperTol = 10;
     private static final int lowerTol = 2;
-    private static final int initCapacity = 7;
+    private int initCapacityIndex = 0;
 
-    public HashTable(int M ) {
+    public HashTable2( ) {
 
-        this.M = M;
+        this.M = capacity[initCapacityIndex];
         this.size = 0;
         hashtable = new TreeMap[M];
         for (int i = 0; i < M; i++) {
@@ -30,9 +39,6 @@ public class HashTable<K, V> {
         }
     }
 
-    public HashTable(){
-        this(initCapacity);
-    }
 
     private int hash(K key){
         return (key.hashCode() & 0x7fffffff) % M;
@@ -49,8 +55,9 @@ public class HashTable<K, V> {
         } else {
             map.put(key,value);
             size++;
-            if(size >= upperTol * M){ // size/M >= upperTol
-                resize(2 * M);
+            if(size >= upperTol * M && initCapacityIndex + 1 < capacity.length){ // size/M >= upperTol
+                initCapacityIndex++;
+                resize(capacity[initCapacityIndex]);
             }
         }
     }
@@ -62,8 +69,9 @@ public class HashTable<K, V> {
             ret = map.remove(key);
             size--;
 
-            if(size < lowerTol * M && M / 2 >= initCapacity){
-                resize(M / 2);
+            if(size < lowerTol * M && initCapacityIndex -1 >= 0){
+                initCapacityIndex--;
+                resize(capacity[initCapacityIndex]);
             }
         }
         return ret;
