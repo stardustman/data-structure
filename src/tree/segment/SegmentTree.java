@@ -1,4 +1,4 @@
-package tree;
+package tree.segment;
 
 /**
  * 线段树视为满二叉树
