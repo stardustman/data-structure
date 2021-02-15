@@ -1,147 +1,319 @@
-package tree;
+package tree.avl;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Stack;
 
-public class BST<E extends Comparable<E>> { // E extends Comparable<E> 视为一个 UnknownTypeComparable
+import java.util.ArrayList;
+
+public class AVLTree<K extends Comparable<K>, V>  {
     private class Node{
-        public E e;
+        public K key;
+        public V value;
         public Node left, right;
+        public int height; // 节点高度
 
-        public Node(E e){
-            this.e = e;
-            left = null;
-            right = null;
+        public Node(K key, V value) {
+            this.key = key;
+            this.value = value;
+            this.left = null;
+            this.right = null;
+            this.height = 1; // 叶子节点高度为 1
         }
     }
 
     private Node root;
     private int size;
 
-    public BST(){
-        root = null;
-        size = 0;
+    public AVLTree() {
+        this.root = null;
+        this.size = 0;
     }
 
-    public int size(){
-        return size;
+    // 获取节点高度
+    private int getHeight(Node node){
+        if(node == null){
+            return 0;
+        }
+        return node.height;
     }
 
-    public boolean isEmpty(){
-        return size == 0;
+    /**
+     * 获得 node 的平衡因子，左子树高度 - 右子树高度
+     * @param node
+     * @return
+     */
+    private int getBalanceFactor(Node node){
+        if(node == null){
+            return 0;
+        }
+        return getHeight(node.left) - getHeight(node.right);
     }
 
-    // 向 bst 中添加新的元素
-    public void add(E e){
-        root = add(root, e);
+    // 判断该二叉树是不是一棵二分搜索树
+    public boolean isBST(){
+        ArrayList<K> keys = new ArrayList<>();
+        inOrder(root, keys);
+        for (int i = 1; i < keys.size(); i++) {
+            if(keys.get(i - 1).compareTo(keys.get(i)) > 0){
+                return false;
+            }
+        }
+        return true;
     }
 
-    // 返回插入新节点后二分搜索树的根
-    private Node add(Node node, E e){
-       if(node == null){
-           size++;
-           return new Node(e);
-       }
-       if(e.compareTo(node.e) < 0){
-           node.left = add(node.left, e);
-       }
-       if(e.compareTo(node.e) > 0){
-           node.right = add(node.right,e);
-       }
-       return node;
+    /**
+     * 中序遍历
+     * @param node
+     * @param keys
+     */
+    private void inOrder(Node node, ArrayList<K> keys){
+        if(node == null){
+            return;
+        }
+        inOrder(node.left, keys);
+        keys.add(node.key);
+        inOrder(node.right, keys);
     }
 
-    public boolean contains(E e){
-        return contains(root,e);
+    public boolean isBalanced(){
+        return isBalanced(root);
     }
-    // 以 node 为根的节点是否包括 e
-    private boolean contains(Node node, E e){
-        if(node == null)
-            return false;
-        if(e.compareTo(node.e) == 0)
+
+    /**
+     * 以 node 为根的二分搜索树是不是平衡的
+     * @param node
+     * @return
+     */
+    private boolean isBalanced(Node node){
+        if(node == null){
             return true;
-        else if(e.compareTo(node.e) < 0)
-            return contains(node.left,e);
-        else //if(e.compareTo(node.e) > 0)
-            return contains(node.right,e);
-    }
-
-    // 深度优先遍历
-    public void preOrder(){
-        preOrder(root);
-    }
-    // 前序遍历以 node 为 root 的二分搜索树
-    private void preOrder(Node node){
-        if(node == null)
-            return;
-        // 等价于 if(node != null)
-        System.out.println(node.e); // root
-        preOrder(node.left); // left subtree
-        preOrder(node.right); // right subtree
-    }
-
-    public void preOrderNR(){
-        Stack<Node> stack = new Stack<>();
-        stack.push(root);
-        while(!stack.isEmpty()){
-            Node cur = stack.pop();
-            System.out.println(cur.e);
-            // 先右
-            if(cur.right != null)
-                stack.push(cur.right);
-            if(cur.left != null)
-                stack.push(cur.left);
         }
+        int balanceFactor = getBalanceFactor(node);
+        if(Math.abs(balanceFactor) > 1){
+            return false;
+        }
+        return isBalanced(node.left) && isBalanced(node.right);
+    }
+
+    /**       y
+     *       / \      rightRotate(y)
+     *      x   T4 ------------------->      x
+     *     / \                             /  \
+     *    z  T3                           z    y
+     *   / \                            /  \  / \
+     *  T1 T2                          T1 T2 T3 T4
+     * @param y 失衡的节点
+     * @return
+     */
+    private Node rightRotate(Node y){
+        Node x = y.left;
+        Node T3 = x.right;
+        x.right = y;
+        y.left = T3;
+        // 更新节点 height，先更新 y 的值
+        y.height = Math.max(getHeight(y.left),getHeight(y.right)) + 1;
+        x.height = Math.max(getHeight(x.left),getHeight(x.right)) + 1;
+        // 旋转后的 root
+        return x;
+    }
+
+    /**       y
+     *       / \      leftRotate(y)
+     *      T1  x ------------------->        x
+     *        /  \                          /  \
+     *       T2  z                         y    z
+     *          / \                      /  \  / \
+     *         T3 T4                    T1 T2 T3 T4
+     * @param y 失衡的节点
+     * @return 平衡后的 root
+     */
+    private Node leftRotate(Node y){
+        Node x = y.right;
+        Node T2 = x.left;
+        x.left = y;
+        y.right = T2;
+        // 更新节点 height，先更新 y 的值
+        y.height = Math.max(getHeight(y.left),getHeight(y.right)) + 1;
+        x.height = Math.max(getHeight(x.left),getHeight(x.right)) + 1;
+        // 旋转后的 root
+        return x;
 
     }
 
 
-
-    // 中序遍历  left root right
-    public void inOrder(){
-        inOrder(root);
+    public void add(K key, V value) {
+        root = add(root,key,value);
     }
 
-    private void inOrder(Node node){
-        if(node == null)
-            return;
-        inOrder(node.left);
-        System.out.println(node.e);
-        inOrder(node.right);
+    /**
+     *
+     * @param node 向以 node 为根的二分搜索树中添加元素(key,value)
+     * @param key
+     * @param value
+     * @return
+     */
+    private Node add(Node node, K key, V value){
+        if(node == null){
+            size++;
+            return new Node(key,value); // 叶子节点，高度为 1
+        }
+        if(key.compareTo(node.key) < 0){
+            node.left = add(node.left,key,value);
+        }
+        else if(key.compareTo(node.key) > 0){
+            node.right = add(node.right,key,value);
+        } else{ // key.compareTo(node.key) ==  0
+            node.value = value;
+        }
+        // 更新当前 node height
+        node.height = 1 + Math.max(getHeight(node.left),getHeight(node.right));
+        // 该节点平衡因子
+        int balanceFactor = getBalanceFactor(node);
+        // 判断是否失衡了
+        if(Math.abs(balanceFactor) > 1){
+            System.out.println("unbalanced : " + balanceFactor);
+        }
+        // 平衡维护，以该节点为根的左子树比右子树高，该节点的左子节点(平衡的)也是如此
+        // LL (node's left child's left)
+        if(balanceFactor > 1 && getBalanceFactor(node.left) >= 0){
+            return rightRotate(node);
+        }
+        // 平衡维护，以该节点为根的左子树比右子树低，该节点的右子节点(平衡的)也是如此
+        // RR (node's right child's right)
+        if(balanceFactor < -1 && getBalanceFactor(node.right) <= 0){
+            return leftRotate(node);
+        }
+        // LR
+        if(balanceFactor > 1 && getBalanceFactor(node.left) < 0){
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+        // RL
+        if(balanceFactor < -1 && getBalanceFactor(node.right) > 0){
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+        // default
+        return node;
     }
 
-    // 后序遍历 left right root, 内存管理，先释放子节点，再释放本身
-    public void postOrder(){
-        postOrder(root);
-    }
-    private void postOrder(Node node){
-        if(node == null)
-            return;
-        postOrder(node.left);
-        postOrder(node.right);
-        System.out.println(node.e);
-    }
 
-    // 层序遍历, 广度优先遍历
-    public void levelOrder(){
-        Queue<Node> q = new LinkedList<Node>();
-        q.add(root);
-        while (!q.isEmpty()){
-            Node cur = q.remove();
-            System.out.println(cur.e);
-            if(cur.left != null)
-                q.add(cur.left);
-            if(cur.right != null)
-                q.add(cur.right);
+
+    // 返回以 node 为节点的 bst, key 所在的节点
+    private Node getNode(Node node, K key){
+        if(node == null){
+            return  null;
+        }
+        if(key.compareTo(node.key) == 0){
+            return node;
+        }
+        else if(key.compareTo(node.key) < 0){
+            return getNode(node.left, key);
+        }
+        else { //if(key.compareTo(node.key) > 0)
+            return getNode(node.right, key);
         }
     }
 
-    // 最小元素
-    public E minimum(){
-        if(size == 0)
-            throw new IllegalArgumentException("BST is empty");
-        return minimum(root).e;
+    public V remove(K key) {
+        Node node = getNode(root,key);
+        if(node != null){
+            remove(root, key);
+            return node.value;
+        }
+        return null;
+    }
+
+    // 删除以 node 为 bst root 中键位 key 的节点。
+    // 返回删除节点后,调整平衡后新的 bst 的根
+    private Node remove(Node node, K key){
+        if(node == null){
+            return null;
+        }
+        Node retNode;
+        if(key.compareTo(node.key) < 0){
+            node.left = remove(node.left, key);
+            retNode = node;
+            //return node;
+        } else if(key.compareTo(node.key) > 0){
+            node.right = remove(node.right, key);
+            retNode = node;
+            //return node;
+        } else{
+            // 待删除节点左子树为空
+            if(node.left == null){
+                Node rightNode = node.right;
+                node.right = null;
+                size--;
+                retNode = rightNode;
+            }
+            // 待删除节点右子树为空
+            else if(node.right == null){
+                Node leftNode = node.left;
+                node.left = null;
+                size--;
+                retNode = leftNode;
+            }
+            else {
+                // 左右子树都不为空
+                // 找到该节点右子树中的最小值，为被删除节点的后继节点
+                Node successor = minimum(node.right);
+                // 删除该 successor 节点
+                //successor.right = removeMin(node.right); 这里没有调整平衡，不能直接使用
+                successor.right = remove(node.right, successor.key);
+                // 继承被删除节点的左子树
+                successor.left = node.left;
+                node.left = node.right = null;
+                retNode = successor;
+                //return successor;
+            }
+        }
+        // 删除的是叶子节点，此时返回的 root 是空
+        if(retNode == null){
+            return null;
+        }
+        // 更新当前 retNode height
+        retNode.height = 1 + Math.max(getHeight(retNode.left),getHeight(retNode.right));
+        // 该节点平衡因子
+        int balanceFactor = getBalanceFactor(retNode);
+        // 判断是否失衡了
+        if(Math.abs(balanceFactor) > 1){
+            System.out.println("unbalanced : " + balanceFactor);
+        }
+        // 平衡维护，以该节点为根的左子树比右子树高，该节点的左子节点(平衡的)也是如此
+        // LL (node's left child's left)
+        if(balanceFactor > 1 && getBalanceFactor(retNode.left) >= 0){
+            return rightRotate(retNode);
+        }
+        // 平衡维护，以该节点为根的左子树比右子树低，该节点的右子节点(平衡的)也是如此
+        // RR (node's right child's right)
+        if(balanceFactor < -1 && getBalanceFactor(retNode.right) <= 0){
+            return leftRotate(retNode);
+        }
+        // LR
+        if(balanceFactor > 1 && getBalanceFactor(retNode.left) < 0){
+            retNode.left = leftRotate(retNode.left);
+            return rightRotate(retNode);
+        }
+        // RL
+        if(balanceFactor < -1 && getBalanceFactor(retNode.right) > 0){
+            retNode.right = rightRotate(retNode.right);
+            return leftRotate(retNode);
+        }
+        // default
+        return retNode;
+
+    }
+
+    // 删除以 node 为根的 bst 的最小节点
+    // 返回删除节点后新的 bst 的根
+    private Node removeMin(Node node){
+        if(node.left == null){
+            Node rightNode = node.right;
+            node.right = null;
+            size--;
+            return rightNode; // 新的 root
+        }
+        node.left = removeMin(node.left);
+        return node;
     }
 
     private Node minimum(Node node){
@@ -150,153 +322,29 @@ public class BST<E extends Comparable<E>> { // E extends Comparable<E> 视为一
         return minimum(node.left);
     }
 
-    public E minimumNR(){
-        if(size == 0)
-            throw new IllegalArgumentException("BST is empty");
-        Node node = root;
-        while (node.left != null){
-            node = node.left;
-        }
-        return node.e;
+    public boolean contains(K key) {
+        return getNode(root,key) != null;
     }
 
-
-    // 最大元素
-    public E maximum(){
-        if(size == 0)
-            throw new IllegalArgumentException("BST is empty");
-        return maximum(root).e;
+    public V get(K key) {
+        Node node = getNode(root,key);
+        return node == null ? null : node.value ;
     }
 
-    private Node maximum(Node node){
-        if(node.right == null)
-            return node;
-        return maximum(node.right);
-    }
-
-    public E maximumNR(){
-        if(size == 0)
-            throw new IllegalArgumentException("BST is empty");
-        Node node = root;
-        while (node.right != null){
-            node = node.right;
-        }
-        return node.e;
-    }
-
-    // 删除 bst 中最小值，并返回该值
-    public E removeMin(){
-        E ret = minimum();
-        root = removeMin(root);
-        return ret;
-    }
-
-    // 删除以 node 为根的 bst 的最小节点
-    // 返回删除节点后新的 bst 的根
-    private Node removeMin(Node node){
-       if(node.left == null){
-           Node rightNode = node.right;
-           node.right = null;
-           size--;
-           return rightNode; // 新的 root
-       }
-       node.left = removeMin(node.left);
-       return node;
-    }
-
-
-    // 删除 bst 中最大值，并返回该值
-    public E removeMax(){
-        E ret = maximum();
-        root = removeMax(root);
-        return ret;
-    }
-
-    // 删除以 node 为根的 bst 的最大节点
-    // 返回删除节点后新的 bst 的根
-    private Node removeMax(Node node){
-        if(node.right == null){
-            Node leftNode = node.left;
-            node.left = null;
-            size--;
-            return leftNode; // 新的 root
-        }
-        node.right = removeMax(node.right);
-        return node;
-    }
-
-    // 从 bst 中删除元素值为 e 的节点
-    public void remove(E e){
-        root = remove(root, e);
-    }
-
-    // 删除以 node 为根的 bst 中值为 e 的节点
-    // 返回删除节点后新的 bst 的根
-    private Node remove(Node node, E e){
-        if(node == null)
-            return null;
-        if(e.compareTo(node.e) < 0){
-            node.left = remove(node.left, e);
-            return node;
-        }
-        else if(e.compareTo(node.e) > 0){
-            node.right = remove(node.right,e);
-            return node;
-        }
-        else { // e == node.e
-
-            // 待删除节点左子树为空
-            if(node.left == null){
-                Node rightNode = node.right;
-                node.right = null;
-                size--;
-                return rightNode;
-            }
-            // 待删除节点右子树为空
-            if(node.right == null){
-                Node leftNode = node.left;
-                node.left = null;
-                size--;
-                return leftNode;
-            }
-            // 左右子树都不为空
-            // 找到该节点右子树中的最小值，为被删除节点的后继节点
-            Node successor = minimum(node.right);
-            // 删除该 successor 节点
-            successor.right = removeMin(node.right);
-            // 继承被删除节点的左子树
-            successor.left = node.left;
-            node.left = node.right = null;
-            return successor;
-
-            // predecessor
-        }
-
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder res = new StringBuilder();
-        generateBSTString(root, 0, res);
-        return res.toString();
-    }
-
-    private void generateBSTString(Node node, int depth, StringBuilder res){
+    public void set(K key, V value) {
+        Node node = getNode(root, key);
         if(node == null){
-            res.append(generateDepthString(depth) + "null\n");
-            return;
+            throw new IllegalArgumentException(key + " doesn't exist!");
         }
-        res.append(generateDepthString(depth) + node.e + "\n");
-        generateBSTString(node.left, depth + 1, res);
-        generateBSTString(node.right, depth + 1, res);
+        node.value = value;
 
     }
 
-    private String generateDepthString(int depth){
-        StringBuilder res = new StringBuilder();
-        for (int i = 0; i < depth; i++) {
-            res.append("--");
-        }
-        return res.toString();
+    public int getSize() {
+        return size;
+    }
+
+    public boolean isEmpty() {
+        return size == 0;
     }
 }
